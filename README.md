@@ -1,4 +1,6 @@
-# VorvanDocs 🐳
+# 🐳 mini - Vorvaň Documentation System
 
-lehký systém pro zobrazování dokumentace pomocí Markdownu bez nutnosti složité konfigurace nebo backendového serveru.
-VorvanDocs - simple dynamic fast .md files in documentations
+Lehký systém pro zobrazování dokumentace pomocí Markdownu bez nutnosti složité konfigurace nebo backendového serveru.
+
+
+Simple dynamic fast .md files in documentations.
