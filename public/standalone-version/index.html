@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MicroVorvanDocs - Lightweight Documentation</title>
+  <style>
+    /* Light/dark mode CSS variables */
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #333333;
+      --link-color: #4361ee;
+      --code-bg: #f1f5f9;
+      --code-color: #475569;
+      --border-color: #e2e8f0;
+      --sidebar-bg: #f8fafc;
+      --nav-hover: #f1f5f9;
+      --header-bg: #ffffff;
+    }
+    
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #0f172a;
+        --text-color: #e2e8f0;
+        --link-color: #60a5fa;
+        --code-bg: #1e293b;
+        --code-color: #94a3b8;
+        --border-color: #334155;
+        --sidebar-bg: #1e293b;
+        --nav-hover: #334155;
+        --header-bg: #1e293b;
+      }
+    }
+    
+    /* Manual dark mode toggle */
+    .dark-mode {
+      --bg-color: #0f172a;
+      --text-color: #e2e8f0;
+      --link-color: #60a5fa;
+      --code-bg: #1e293b;
+      --code-color: #94a3b8;
+      --border-color: #334155;
+      --sidebar-bg: #1e293b;
+      --nav-hover: #334155;
+      --header-bg: #1e293b;
+    }
+    
+    /* Base styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.6;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    /* Layout */
+    .container {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background-color: var(--sidebar-bg);
+      border-right: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      overflow-y: auto;
+      transition: transform 0.3s ease;
+    }
+    
+    .sidebar-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .sidebar-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .sidebar-close {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+    
+    .sidebar-nav {
+      padding: 1rem;
+    }
+    
+    .sidebar-section {
+      margin-bottom: 1.5rem;
+    }
+    
+    .sidebar-section-title {
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-color);
+      opacity: 0.7;
+      margin-bottom: 0.5rem;
+    }
+    
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      text-decoration: none;
+      color: var(--text-color);
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+      transition: background-color 0.2s;
+    }
+    
+    .sidebar-nav-item:hover {
+      background-color: var(--nav-hover);
+    }
+    
+    .sidebar-nav-item.active {
+      background-color: rgba(67, 97, 238, 0.1);
+      color: var(--link-color);
+      font-weight: 500;
+    }
+    
+    .sidebar-nav-icon {
+      margin-right: 0.5rem;
+    }
+    
+    /* Main content */
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 0;
+      transition: margin-left 0.3s ease;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .menu-button {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      color: var(--text-color);
+    }
+    
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .theme-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-color);
+    }
+    
+    .content-wrapper {
+      display: grid;
+      grid-template-columns: 1fr minmax(0, 800px) 1fr;
+      padding: 2rem 1.5rem;
+    }
+    
+    .content {
+      grid-column: 2;
+    }
+    
+    .toc {
+      position: sticky;
+      top: 5rem;
+      align-self: start;
+      max-height: calc(100vh - 5rem);
+      overflow-y: auto;
+      padding-left: 2rem;
+      grid-column: 3;
+      font-size: 0.875rem;
+    }
+    
+    .toc-title {
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    
+    .toc-list {
+      list-style: none;
+    }
+    
+    .toc-item {
+      margin-bottom: 0.5rem;
+    }
+    
+    .toc-link {
+      color: var(--text-color);
+      opacity: 0.8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .toc-link:hover {
+      color: var(--link-color);
+      opacity: 1;
+    }
+    
+    /* Markdown styles */
+    .markdown-body h1 {
+      font-size: 2rem;
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .markdown-body h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .markdown-body h3 {
+      font-size: 1.25rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .markdown-body p {
+      margin-bottom: 1rem;
+      line-height: 1.7;
+    }
+    
+    .markdown-body a {
+      color: var(--link-color);
+      text-decoration: none;
+    }
+    
+    .markdown-body a:hover {
+      text-decoration: underline;
+    }
+    
+    .markdown-body code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9em;
+      padding: 0.2em 0.4em;
+      background-color: var(--code-bg);
+      color: var(--code-color);
+      border-radius: 3px;
+    }
+    
+    .markdown-body pre {
+      margin: 1rem 0;
+      padding: 1rem;
+      background-color: var(--code-bg);
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    
+    .markdown-body pre code {
+      padding: 0;
+      background-color: transparent;
+    }
+    
+    .markdown-body blockquote {
+      padding-left: 1rem;
+      border-left: 4px solid var(--border-color);
+      color: var(--text-color);
+      opacity: 0.8;
+      margin: 1rem 0;
+    }
+    
+    .markdown-body ul, .markdown-body ol {
+      margin-bottom: 1rem;
+      margin-left: 1.5rem;
+    }
+    
+    .markdown-body hr {
+      height: 1px;
+      background-color: var(--border-color);
+      border: 0;
+      margin: 2rem 0;
+    }
+    
+    .markdown-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    
+    .markdown-body th, .markdown-body td {
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+    
+    .markdown-body th {
+      background-color: var(--code-bg);
+      font-weight: 600;
+    }
+    
+    /* Footer */
+    .footer {
+      background-color: var(--sidebar-bg);
+      border-top: 1px solid var(--border-color);
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-color);
+      opacity: 0.8;
+    }
+    
+    /* Mobile adjustments */
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        z-index: 50;
+      }
+      
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      
+      .sidebar-close {
+        display: block;
+      }
+      
+      .main {
+        margin-left: 0;
+      }
+      
+      .menu-button {
+        display: block;
+      }
+      
+      .content-wrapper {
+        grid-template-columns: 1fr;
+      }
+      
+      .content {
+        grid-column: 1;
+      }
+      
+      .toc {
+        display: none;
+      }
+    }
+
+    /* Loading indicator */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top-color: var(--link-color);
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span>⚡</span>
+          <span>MicroVorvanDocs</span>
+        </div>
+        <button id="close-sidebar" class="sidebar-close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Documentation</div>
+          <div id="pages-list">
+            <!-- Pages will be dynamically inserted here -->
+          </div>
+        </div>
+        
+        <div class="sidebar-section">
+          <div class="sidebar-section-title">Resources</div>
+          <a href="https://github.com" target="_blank" class="sidebar-nav-item">
+            <span class="sidebar-nav-icon">📦</span>
+            <span>GitHub Repository</span>
+          </a>
+          <a href="https://github.com/issues" target="_blank" class="sidebar-nav-item">
+            <span class="sidebar-nav-icon">🐛</span>
+            <span>Report Issues</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- Main content -->
+    <main class="main">
+      <header class="header">
+        <button id="toggle-sidebar" class="menu-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        
+        <div id="page-title"></div>
+        
+        <div class="header-actions">
+          <button id="theme-toggle" class="theme-toggle">
+            <!-- Sun icon (for dark mode) -->
+            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <!-- Moon icon (for light mode) -->
+            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+      
+      <div class="content-wrapper">
+        <div id="content" class="content markdown-body">
+          <div class="loading">
+            <div class="spinner"></div>
+          </div>
+        </div>
+        
+        <div id="toc" class="toc">
+          <div class="toc-title">On This Page</div>
+          <ul id="toc-list" class="toc-list">
+            <!-- TOC items will be dynamically inserted here -->
+          </ul>
+        </div>
+      </div>
+      
+      <footer class="footer">
+        <div>
+          MicroVorvanDocs - Lightweight Documentation System
+        </div>
+        <div>
+          Built with ⚡ WebAssembly | No dependencies | Just 15KB
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- WASM Markdown parser + router -->
+  <script type="module">
+    import init from './microdocs.wasm.js';
+
+    // Page definitions
+    const pages = [
+      { id: 'README', title: 'Introduction', icon: '📘' },
+      { id: 'quickstart', title: 'Quick Start', icon: '🚀' },
+      { id: 'api', title: 'API Reference', icon: '⚙️' },
+      { id: 'examples', title: 'Examples', icon: '💡' }
+    ];
+
+    // State
+    let currentPage = window.location.hash.slice(1) || 'README';
+    let isDarkMode = localStorage.getItem('darkMode') === 'true' || 
+                     window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    // DOM elements
+    const contentEl = document.getElementById('content');
+    const pageTitleEl = document.getElementById('page-title');
+    const tocListEl = document.getElementById('toc-list');
+    const pagesListEl = document.getElementById('pages-list');
+    const sidebarEl = document.getElementById('sidebar');
+    const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const sunIcon = document.getElementById('sun-icon');
+    const moonIcon = document.getElementById('moon-icon');
+
+    // Initialize the app
+    async function initialize() {
+      // Initialize WASM module
+      await init();
+      
+      // Populate pages list
+      renderPagesList();
+      
+      // Set initial theme
+      updateThemeUI();
+      
+      // Load the initial page
+      await loadPage(currentPage);
+      
+      // Set up event listeners
+      setupEventListeners();
+    }
+
+    // Render the list of pages in the sidebar
+    function renderPagesList() {
+      pagesListEl.innerHTML = '';
+      
+      pages.forEach(page => {
+        const isActive = currentPage === page.id;
+        
+        const item = document.createElement('a');
+        item.href = `#${page.id}`;
+        item.className = `sidebar-nav-item ${isActive ? 'active' : ''}`;
+        item.dataset.pageId = page.id;
+        
+        const icon = document.createElement('span');
+        icon.className = 'sidebar-nav-icon';
+        icon.textContent = page.icon;
+        
+        const title = document.createElement('span');
+        title.textContent = page.title;
+        
+        item.appendChild(icon);
+        item.appendChild(title);
+        pagesListEl.appendChild(item);
+      });
+    }
+
+    // Update the active page highlight in the sidebar
+    function updateActivePage() {
+      const items = pagesListEl.querySelectorAll('.sidebar-nav-item');
+      items.forEach(item => {
+        if (item.dataset.pageId === currentPage) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
+    // Load a page by ID
+    async function loadPage(pageId) {
+      try {
+        // Show loading spinner
+        contentEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+        
+        // Update current page
+        currentPage = pageId;
+        
+        // Update the page title
+        const pageTitle = pages.find(p => p.id === pageId)?.title || pageId;
+        pageTitleEl.textContent = pageTitle;
+        document.title = `${pageTitle} - MicroVorvanDocs`;
+        
+        // Update active page in sidebar
+        updateActivePage();
+        
+        // Fetch the markdown file
+        const response = await fetch(`../pages/${pageId}.md`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load page: ${response.statusText}`);
+        }
+        
+        const markdown = await response.text();
+        
+        // Extract TOC
+        const tocItems = extractToc(markdown);
+        renderToc(tocItems);
+        
+        // Render markdown to HTML
+        const html = window.renderMarkdown(markdown);
+        contentEl.innerHTML = html;
+        
+        // Close sidebar on mobile after navigation
+        if (window.innerWidth < 768) {
+          sidebarEl.classList.remove('open');
+        }
+        
+        // Update the URL hash without triggering a hash change event
+        const newUrl = window.location.pathname + window.location.search + '#' + pageId;
+        history.replaceState(null, '', newUrl);
+      } catch (error) {
+        console.error('Error loading page:', error);
+        contentEl.innerHTML = `
+          <h1>Error Loading Page</h1>
+          <p>Failed to load the requested page: ${pageId}</p>
+          <p>${error.message}</p>
+        `;
+      }
+    }
+
+    // Extract TOC items from markdown
+    function extractToc(markdown) {
+      const headingRegex = /^(#{1,3})\s+(.+)$/gm;
+      const items = [];
+      let match;
+      
+      while ((match = headingRegex.exec(markdown)) !== null) {
+        const level = match[1].length;
+        const text = match[2].trim();
+        
+        // Create an ID by slugifying the heading text
+        const id = text
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, '')
+          .replace(/\s+/g, '-');
+        
+        items.push({ id, text, level });
+      }
+      
+      return items;
+    }
+
+    // Render TOC
+    function renderToc(items) {
+      if (items.length === 0) {
+        document.getElementById('toc').style.display = 'none';
+        return;
+      }
+      
+      document.getElementById('toc').style.display = 'block';
+      tocListEl.innerHTML = '';
+      
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'toc-item';
+        
+        const a = document.createElement('a');
+        a.href = `#${item.id}`;
+        a.className = 'toc-link';
+        a.textContent = item.text;
+        a.style.paddingLeft = `${(item.level - 1) * 0.75}rem`;
+        
+        li.appendChild(a);
+        tocListEl.appendChild(li);
+      });
+    }
+
+    // Toggle the theme
+    function toggleTheme() {
+      isDarkMode = !isDarkMode;
+      localStorage.setItem('darkMode', isDarkMode);
+      updateThemeUI();
+    }
+
+    // Update the UI based on the current theme
+    function updateThemeUI() {
+      if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+      } else {
+        document.body.classList.remove('dark-mode');
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+      }
+    }
+
+    // Set up event listeners
+    function setupEventListeners() {
+      // Page navigation
+      pagesListEl.addEventListener('click', e => {
+        e.preventDefault();
+        const item = e.target.closest('.sidebar-nav-item');
+        if (item) {
+          const pageId = item.dataset.pageId;
+          if (pageId && pageId !== currentPage) {
+            loadPage(pageId);
+          }
+        }
+      });
+      
+      // Hash change
+      window.addEventListener('hashchange', () => {
+        const pageId = window.location.hash.slice(1) || 'README';
+        if (pageId !== currentPage) {
+          loadPage(pageId);
+        }
+      });
+      
+      // Theme toggle
+      themeToggleBtn.addEventListener('click', toggleTheme);
+      
+      // Sidebar toggle (mobile)
+      toggleSidebarBtn.addEventListener('click', () => {
+        sidebarEl.classList.toggle('open');
+      });
+      
+      // Close sidebar (mobile)
+      closeSidebarBtn.addEventListener('click', () => {
+        sidebarEl.classList.remove('open');
+      });
+    }
+
+    // Start the app
+    initialize();
+  </script>
+</body>
+</html>
